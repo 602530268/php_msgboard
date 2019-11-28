@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>欧啦留言板</title>
+
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+
+<body>
+
+    <div style="width: 60%;align-items: center;">
+
+        <div class="page-header">
+            <h1>PHP留言板!</h1>
+        </div>
+
+        <div style="margin: auto;display: flex;">
+
+            <div style="margin-right: 50px;width: 70%;">
+                <?php
+                if (sizeof($data) == 0) {
+                    echo "<p>暂无留言数据</p>";
+                }
+
+                            foreach ($data as $v) {?>
+                    <div class="list-group" style="word-break:break-all">
+                        <a class="list-group-item active">
+                            <h4 class="list-group-item-heading">
+                                昵称:
+                                <?php echo $v['nickname']; ?>
+                            </h4>
+                        </a>
+                        <a class="list-group-item">
+                            <h4 class="list-group-item-heading" data-id="<?php echo $v[ 'id'] ?>">
+                                <?php echo $v['content']; ?>
+                            </h4>
+                            <p class="list-group-item-text" style="display: flex;align-items: center;">
+                                <?php echo $v['id'] ?>楼
+                                <?php echo $v['time']; ?>
+
+                                <div>
+                                        <input id="msg_password" type="text" value="<?php echo $v['password'] ?>" style="width: 50px;" hidden>
+                                        <input id="deleteMsg" class="btn btn-warning" type="button" value="删除" data-id="<?php echo $v[ 'id'] ?>" data-password="<?php echo $v['password'] ?>">
+                                        <input id="editMsg" class="btn btn-info" type="button" value="修改" data-id="<?php echo $v[ 'id'] ?>" data-password="<?php echo $v['password'] ?>">
+                                </div>
+
+                            </p>
+                        </a>
+                    </div>
+
+                    <?php } ?>
+            </div>
+
+            <div class="save" style="float: left; ">
+                <div class="form-group ">
+                    <label for="exampleInputEmail1 ">您的昵称</label>
+                    <input type="text " class="form-control " required="required" id="nickname" name="nickname" placeholder="昵称">
+                </div>
+                <div class="form-group ">
+                    <label for="exampleInputEmail1 ">内容</label>
+                    <input type="text " class="form-control " required id="content" name="content" placeholder="内容">
+                </div>
+                <div class="form-group ">
+                    <label for="exampleInputEmail1 ">保护密码</label>
+                    <input type="text " class="form-control " required id="password" name="password" placeholder="保护密码">
+                </div>
+                <!-- <button type="submit " class="btn btn-primary ">留言</button> -->
+                <button id="saveMsg" class="btn btn-primary ">留言</button>
+            </div>
+        </div>
+
+    </div>
+    <br>
+
+
+
+</body>
+
+<script>
+    $(document).ready(function() {
+
+        $("#testMe").click(function() {
+            $.ajax({
+                url: "./common/delete.php",
+                type: 'post',
+                data: {},
+                success: function(data) {
+                    console.log(data)
+                }
+            });
+        });
+
+        // 存储留言
+        $("#saveMsg").click(function() {
+            // let input1 = $('.form-control:eq(0)').val()
+
+            var nickname = $('#nickname').val();
+            var content = $('#content').val();
+            var password = $('#password').val();
+            console.log(nickname, content, password)
+            if (nickname == "") {
+                alert("昵称不能为空");
+                return;
+            }
+            if (content == "") {
+                alert("内容不能为空");
+                return;
+            }
+            if (password == "") {
+                alert("保护密码不能为空");
+                return;
+            }
+
+            $.ajax({
+                url: './common/save.php',
+                type: 'post',
+                data: {
+                    nickname: nickname,
+                    content: content,
+                    password: password
+                },
+                success: function(response) {
+                    if (response == 'success') {
+                        alert('保存成功');
+                    }
+                    console.log(response);
+                    window.location.reload()
+                }
+            })
+        });
+
+        // 修改留言
+        $(".btn-info").click(function() {
+            var pwd = prompt("请输入保护密码"); // 弹出input框 
+            if (pwd != null && pwd != '') {
+                console.log(pwd);
+                let id = $(this).attr('data-id'); // 获取当前点击的item中的ID
+                let password = $(this).attr('data-password'); // 获取当前点击的item中的password
+
+                if (pwd != password) {
+                    alert("保护密码输入错误");
+                    return;
+                }
+
+                var newContent = prompt("请输入新留言:")
+                if (newContent) {
+                    $.ajax({
+                        url: './common/edit.php',
+                        type: 'post',
+                        data: {
+                            id: id,
+                            password: pwd,
+                            content: newContent
+                        },
+                        success: function(response) {
+                            if (response == 'success') {
+                                alert('修改成功')
+                                window.location.reload()
+                            } else {
+                                alert(response)
+                            }
+                        }
+                    })
+                } else if (newContent === "") {
+                    console.log('null')
+                } else {
+                    console.log('cancel')
+                }
+            }
+        });
+
+        // 删除留言
+        $(".btn-warning").click(function() {
+            var pwd = prompt("请输入保护密码"); // 弹出input框 
+            if (pwd != null && pwd != '') {
+                console.log(pwd);
+                let id = $(this).attr('data-id'); // 获取当前点击的item中的ID
+                let password = $(this).attr('data-password'); // 获取当前点击的item中的password
+
+                if (pwd != password) {
+                    alert("保护密码输入错误");
+                    return;
+                }
+
+                $.ajax({
+                    url: './common/delete.php',
+                    type: 'post',
+                    data: {
+                        id: id,
+                        password: pwd
+                    },
+                    success: function(response) {
+                        if (response == 'success') {
+                            alert('删除成功');
+                        }
+                        window.location.reload();
+                    }
+                })
+            }
+        })
+
+    });
+</script>
+
+</html>
